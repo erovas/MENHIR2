@@ -1,0 +1,50 @@
+<form class="simple-form">
+    
+    <p>What name would you like to use?</p>
+    <input 
+        class="input-textbox" 
+        name="username" 
+        type="text"
+        id="username"
+    >
+
+    <p>Password:</p>
+    <input 
+        class="input-textbox" 
+        name="password" 
+        type="password"
+        id="password"
+        oninput="MH.Controller.CheckPassword()"
+    >
+
+    <p>Repeat password:</p>
+    <input 
+        class="input-textbox" 
+        name="password2" 
+        type="password"
+        id="password2"
+        oninput="MH.Controller.CheckPassword2()"
+    >
+    
+    <p>How old are you?</p>
+    <select 
+        name="Age" 
+        class="input-select" 
+        style="text-align: center; height: 45px;"
+        id="age"
+        >
+    </select>
+    
+    <p>Which is your gender?</p>
+    <div id="selection" class="selection">
+    <!--
+        <input id="Male" type="radio" value="1" name="Gender">
+        <label for="Male" class="btn-default">Male</label>
+        <input id="Female" type="radio" value="2" name="Gender">
+        <label for="Female" class="btn-default">Female</label>
+        <input id="Other" type="radio" value="3" name="Gender">
+        <label for="Other" class="btn-default">Identify as other</label>
+    -->
+    </div>
+    <br><br>
+</form>

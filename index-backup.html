@@ -1,0 +1,2039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>MENHIR</title>
+
+    <script src="https://cdn.jsdelivr.net/gh/c-kick/mobileConsole/hnl.mobileconsole.min.js"></script>
+
+    <link
+      href="css/styles.css"
+      rel="stylesheet"
+    />
+
+    <script type="module" src="js/placeholders/MH.js"></script>
+    
+
+</head>
+<body>
+
+    <!--Barra banner con botón hacia atras-->
+    <nav-bar>
+        <btn-back onclick="MH.GoToBack()">
+            <i></i>
+        </btn-back>
+        <div class="banner-ctn">
+            <img src="AMHL.jpg" style="height: 100%;" />
+            <img src="UPV_EHU.jpg">
+        </div>
+    </nav-bar>
+
+    <!--Botón hacia adelante-->
+    <btn-forward onclick="MH.GoToNext()">
+        <i></i>
+    </btn-forward>
+
+    <!-- Pantalla de  -->
+    <sc-spinner style="display: none;" sc-hide="true">
+        <div class="spinner"></div>
+    </sc-spinner>
+
+    <msg-warning>
+        Mensaje de advertencia
+    </msg-warning>
+
+    <msg-error>
+        Mensaje de error
+    </msg-error>
+
+    <msg-info>
+        Mensaje de error
+    </msg-info>
+
+    <div class="gap"></div>
+
+    <main id="render">
+    </main>
+
+    <script>
+/*
+        const Xam = {
+            new: async (name, ...args) => { return Object.create(null) },
+            CleanUp: async () => {},
+            CleanInstance: async (uid = '') => {},
+            Reload: async () => {},
+            get CurrentDirectory(){
+                return '';
+            }
+        } 
+        */
+
+
+/*
+        
+        Access to the path "/private/var/containers/Bundle/Application/BBD331CF-5904-4BA7-9960-23A8DFCA3588/MENHIR.iOS.app/android_asset/01-07-2023 19_43_38.wav" is denied.
+        
+        
+        */
+
+    </script>
+
+    <template id="SingIn">
+
+        <form name="SignIn">
+            <img src="MENHIR.png" />
+        
+            <input
+                class="input-textbox"
+                id="username"
+                type="text"
+                placeholder="Username"
+            />
+            <input
+                class="input-textbox"
+                id="password"
+                type="password"
+                placeholder="Password"
+            />
+            <!--<div class="btn-default" onclick="MH.Controller.SignIn()">Sign In</div>-->
+            <div class="btn-default" onclick="MH.Controller.Start()">INICIAR</div>
+        
+            <a class="Forgot" onclick="MH.Controller.Forgot()"> Forgot your password? </a>
+        
+            <div class="separator">
+            <span>or</span>
+            </div>
+        
+            <!--<div class="btn-default" onclick="MH.Controller.Register()">Register</div>-->
+            <div class="btn-default" onclick="MH.Controller.Stop()">PARAR</div>
+        </form>
+
+        <script>
+
+            MH.ShowBackButton(false);
+            MH.ShowNextButton(false);
+
+            if(MH.User.NickName != ''){
+                document.getElementById('username').value = MH.User.NickName;
+                document.getElementById('password').value = MH.User.Password;
+            }
+
+            Utils.ExecuteFN(async (window, document) => {
+                let BtnSignInPressed = false;
+
+                MH.Controller.SignIn = async function(){
+
+                    // Como es asincrono, puede darse el caso de que se presione el boton
+                    // mas de una vez, evitar asi errores
+                    if(BtnSignInPressed)
+                        return;
+
+                    BtnSignInPressed = true;
+
+                    let sql = 
+                    `
+                        SELECT
+                            ID,
+                            IDGender,
+                            Date,
+                            NickName,
+                            FirstName,
+                            Age,
+                            Password
+                        FROM Users
+                        WHERE 1 = 1
+                        AND NickName = '${document.getElementById('username').value}'
+                        AND Password = '${document.getElementById('password').value}'
+                    `;
+
+                    let result;
+                    
+                    try {
+                        //await MH.SQLite.Open();
+                        result = await MH.SQLite.ExecuteData(sql);
+                        //await MH.SQLite.Close();
+                    } catch (error) {
+                        console.log(error)
+                        return;
+                    }
+
+                    if(result === null || result.length === 0){
+                        Utils.ShowErrorMsg('Wrong username or password');
+                        BtnSignInPressed = false;
+                        return;
+                    }
+
+                    const User = MH.User;
+                    const item = result[0];
+                    User.ID = item['ID'];
+                    User.IDGender = item['IDGender'];
+                    User.Date = item['Date'];
+                    User.NickName = item['NickName'];
+                    User.FirstName = item['FirstName'];
+                    User.Age = item['Age'];
+                    User.Password = item['Password'];
+
+                    //Si todo bien hacer esto
+                    MH.GoToPage(WVPages.Welcome);
+                }
+
+            });
+
+            MH.Controller.Forgot = function(){
+                Utils.CleanUser();
+                Utils.ShowLoadingScreen();
+                MH.GoToPage(WVPages.RecoverPass);
+            }
+
+            MH.Controller.Register = function(){
+                Utils.CleanUser();
+                Utils.ShowLoadingScreen();
+                MH.GoToPage(WVPages.CreateUserProfile);
+            }
+
+            const Sound = (function () {
+                var df = document.createDocumentFragment();
+                return function Sound(src) {
+                try {
+                    //src = 'file://' + src;
+                    console.log(src);
+                    var snd = new Audio(src);
+                    df.appendChild(snd); // keep in fragment until finished playing
+                    snd.addEventListener("ended", function () {
+                    df.removeChild(snd);
+                    });
+                    snd.onerror = function (e) {
+                    console.log(snd.error);
+                    };
+                    snd.play();
+                    //snd.duration  //Duracion del sonido en segundos
+                    return snd;
+                } catch (error) {
+                    alert(error);
+                }
+                };
+            })();
+
+            MH.Controller.Start = async function(){
+                let PermissionStatus = await MH.DevicePermissions.CheckStatus("Microphone");
+
+                console.log(PermissionStatus);
+
+                if(PermissionStatus == 'Unknown')
+                    PermissionStatus = await MH.DevicePermissions.Request("Microphone");
+
+                console.log(PermissionStatus);
+
+                if(PermissionStatus == 'Granted')
+                    await MH.AudioRecorder.Start();
+                else
+                    console.log(PermissionStatus);
+            }
+
+            MH.Controller.Stop = async function(){
+                let srcResult = await MH.AudioRecorder.Stop();
+                console.log(srcResult);
+                Sound(srcResult);
+            }
+
+            Utils.HideLoadingScreen();
+
+        </script>
+
+    </template>
+    
+
+<!-- RECUPERAR PASSWORD -->
+<div style="display: none;">
+
+    <template id="RecoverPass">
+
+        <script>
+
+            MH.BackPage = WVPages.SingIn;
+            MH.NextPage = WVPages.PassRecovered;
+            MH.ShowBackButton(true);
+            MH.ShowNextButton(true);
+
+        </script>
+
+    </template>
+
+    <template id="PassRecovered">
+
+        <script>
+
+            MH.ShowBackButton(false);
+            MH.ShowNextButton(false);
+
+        </script>
+
+    </template>
+
+</div>
+
+<!-- CREAR USUARIO -->
+<div style="display: none;">
+
+    <template id="CreateUserProfile">
+
+        <form name="SignIn">
+            <!--Quitar-->
+            <p>What is your first name?</p>
+            <input 
+                class="input-textbox" 
+                name="name" 
+                type="text"
+            >
+            
+            <p>What name would you like to use?</p>
+            <input 
+                class="input-textbox" 
+                name="username" 
+                type="text"
+            >
+
+            <p>Password:</p>
+            <input 
+                class="input-textbox" 
+                name="password" 
+                type="password"
+                oninput="MH.Controller.CheckPassword()"
+            >
+
+            <p>Repeat password:</p>
+            <input 
+                class="input-textbox" 
+                name="password2" 
+                type="password"
+                oninput="MH.Controller.CheckPassword2()"
+            >
+            
+            <p>How old are you?</p>
+            <select 
+                name="Age" 
+                class="input-select" 
+                style="text-align: center; height: 45px;"
+                >
+            </select>
+            
+            <p>Which is your gender?</p>
+            <div class="selection">
+            <!--
+                <input id="Male" type="radio" value="1" name="Gender">
+                <label for="Male" class="btn-default">Male</label>
+                <input id="Female" type="radio" value="2" name="Gender">
+                <label for="Female" class="btn-default">Female</label>
+                <input id="Other" type="radio" value="3" name="Gender">
+                <label for="Other" class="btn-default">Identify as other</label>
+            -->
+            </div>
+            <br><br>
+        </form>
+
+        <script>
+
+            Utils.ExecuteFN(async (window, document) => {       
+                const User = MH.User;
+                const actualizar = User.ID !== 0;
+                const name = document.querySelector('input');
+                const username = document.querySelector('input[name="username"]');
+                const password = document.querySelector('input[name="password"]');
+                const password2 = document.querySelector('input[name="password2"]');
+                const age = document.querySelector('select');
+
+                //Agregado de los nodos input de los generos
+                try {
+                    //await MH.SQLite.Open();
+                    
+                    const result = await MH.SQLite.ExecuteData(
+                    `
+                        SELECT ID, Name
+                        FROM Genders
+                    `
+                    );
+
+                    //await MH.SQLite.Close();
+
+                    const div = document.querySelector('div[class="selection"]');
+
+                    for (let index = 0; index < result.length; index++) {
+                        const gender = result[index];
+                        const input = document.createElement('input');
+                        const label = document.createElement('label');
+                        input.id = 'id' + index;
+                        input.type = 'radio';
+                        input.value = gender['ID'];
+                        input.name = 'Gender';
+                        label.setAttribute('for', input.id);
+                        label.className = 'btn-default';
+                        label.innerText = gender['Name'];
+                        div.appendChild(input);
+                        div.appendChild(label);
+                    }
+
+                } catch (error) {
+                    console.log(error, 'Error intentando obtener generos');
+                    return;
+                }
+                
+                const genders = document.querySelectorAll('input[type="radio"]');
+                
+                const CheckNextPage = async function(){
+                    const gender = Utils.GetRadioInputChecked();
+                    let sql = '';
+
+                    User.FirstName = name.value;
+                    User.NickName = username.value;
+                    User.Password = password.value;
+                    User.Age = age.options[age.selectedIndex].value;
+
+                    if(User.FirstName.trim() === ''){
+                        Utils.ShowErrorMsg('Name can not be void');
+                        name.focus();
+                        return;
+                    }
+
+                    if(User.NickName.trim() === ''){
+                        Utils.ShowErrorMsg('Username can not be void');
+                        username.focus();
+                        return;
+                    }
+
+                    try {
+                        sql = 
+                        `
+                            SELECT * 
+                            FROM Users 
+                            WHERE 1 = 1 
+                            AND NickName = '${User.NickName}'
+                        `;
+                        
+                        if(actualizar)
+                            sql += ' AND ID != ' + User.ID;
+                        
+                        //await MH.SQLite.Open();
+                        let result = await MH.SQLite.ExecuteEscalar(sql);
+                        
+                        console.log(sql);
+                        console.log(result);
+
+                        if(result !== null){
+                            Utils.ShowErrorMsg('Username already exists');
+                            username.focus();
+                            return;
+                        }
+                    } catch (error) {
+                        console.log(error);
+                    }
+                    
+
+                    if(User.Password.length < 7){
+                        Utils.ShowErrorMsg('Password must contains minimum 7 characters');
+                        password.focus();
+                        return;
+                    }
+
+                    if(password2.value.length < password.value.length){
+                        Utils.ShowErrorMsg('Please repeat your password');
+                        password2.focus();
+                        return;
+                    }
+
+                    if(gender === null){
+                        Utils.ShowErrorMsg('Please select a gender');
+                        return;
+                    }
+                    
+                    User.IDGender= gender.value;
+
+                    sql = 
+                    `
+                        INSERT INTO Users
+                            (
+                                IDGender,
+                                Date,
+                                NickName,
+                                FirstName,
+                                Age,
+                                Password
+                            )
+                        VALUES
+                            (
+                                ${User.IDGender},
+                                ${new Date().getTime()},
+                                '${User.NickName}',
+                                '${User.FirstName}',
+                                ${User.Age},
+                                '${User.Password}'
+                            )
+                    `;
+
+                    if(actualizar)
+                        sql = 
+                        `
+                            UPDATE Users SET
+                                    IDGender = ${User.IDGender},
+                                    Date = ${new Date().getTime()},
+                                    NickName = '${User.NickName}',
+                                    FirstName = '${User.FirstName}',
+                                    Age = ${User.Age},
+                                    Password = '${User.Password}'
+                            WHERE Users.ID = ${User.ID}
+                        `;
+
+                    try {
+                        //await MH.SQLite.Open();
+
+                        const rowAffected = await MH.SQLite.ExecuteNonQuery(sql);
+
+                        // Se ha insertado, se recupera el ID del usuario creado
+                        if(!actualizar){
+                            sql = 
+                            `
+                                SELECT ID 
+                                FROM Users 
+                                WHERE 1 = 1 
+                                AND NickName = '${User.NickName}'
+                            `;
+
+                            const id = await MH.SQLite.ExecuteEscalar(sql);
+                            User.ID = id;
+                            console.log(User);
+                        }
+
+                        //await MH.SQLite.Close();
+                    } catch (error) {
+                        console.log(error);
+                        return;
+                    }
+                    
+                    Utils.ShowLoadingScreen();
+                    MH.GoToPage(MH.NextPage);
+                }
+
+                for (let index = 18; index <= 110; index++) {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.innerText = index;
+                    age.appendChild(option);
+                }
+
+                MH.Controller.CheckPassword = function(){
+                    if(password.value ===  '')
+                        password.style.backgroundColor = '';
+                    else if(password.value.length > 6)
+                        password.style.backgroundColor = '#4cdf4a';
+                    else 
+                        password.style.backgroundColor = '#ff6060';
+                }
+
+                MH.Controller.CheckPassword2 = function(){
+                    if(password2.value ===  '')
+                        password2.style.backgroundColor = '';
+                    else if(password.value === password2.value)
+                        password2.style.backgroundColor = '#4cdf4a';
+                    else 
+                        password2.style.backgroundColor = '#ff6060';
+                }
+
+                MH.Controller.OnGoToNext = function(){
+                    CheckNextPage();
+                    return false;
+                }
+
+                MH.BackPage = WVPages.SingIn;
+                MH.NextPage = WVPages.Wellbeing_Connect;
+                MH.ShowBackButton(true);
+                MH.ShowNextButton(true);
+
+                const CheckBackPage = async () => {
+                    
+                    //Se ha creado un usuario, se debe borrar, porque el usuario no quiere
+                    //continuar con la creación de la cuenta.
+                    if(User.ID > 0){
+                        const sql = 
+                        `
+                            DELETE FROM Users
+                            WHERE Users.ID = ${User.ID}
+                        `;
+
+                        try {
+                            //await MH.SQLite.Open();
+                            await MH.SQLite.ExecuteNonQuery(sql);
+                            //await MH.SQLite.Close();
+                        } catch (error) {
+                            console.log(error);
+                            return;
+                        }
+                    }
+
+                    Utils.CleanUser();
+                    Utils.ShowLoadingScreen();
+                    MH.GoToPage(MH.BackPage);
+                }
+
+                MH.Controller.OnGoToBack = () => {
+                    CheckBackPage();
+                    return false;
+                };
+
+                if(!actualizar){
+                    Utils.HideLoadingScreen();
+                    return;
+                }
+                    
+
+                name.value = User.FirstName;
+                username.value = User.NickName;
+                password.value = User.Password;
+                MH.Controller.CheckPassword();
+
+                for (let index = 0; index < age.options.length; index++) {
+                    const option = age.options[index];
+                    if(option.value == User.Age){
+                        option.selected = true;
+                        age.selectedIndex = index;
+                        break;
+                    }
+                }
+
+                for (let index = 0; index < genders.length; index++) {
+                    const radio = genders[index];
+                    if(radio.value == User.IDGender){
+                        radio.checked = true;
+                        break;
+                    }
+                }
+
+                Utils.HideLoadingScreen();
+            });
+
+        </script>
+        
+    </template>
+
+    <template id="Wellbeing_Connect">
+
+        <form name="Wellbeing">
+            <h1>Connect</h1>
+
+        </form>
+
+        <script>
+
+            Utils.HideLoadingScreen()
+
+            Utils.ExecuteFN(async (window, document) => {
+                const main = document.querySelector('main');
+                const form = document.querySelector('form');
+
+                main.style.backgroundColor = 'var(--color-connect)'
+
+                // Rellenar los hobbies en la pantalla
+                try {
+                    const sql =
+                    `
+                        SELECT 
+                            ID,
+                            Name
+                        FROM WellbeingHobbies
+                        WHERE IDWellbeing = 1
+                    `;
+
+                    //await MH.SQLite.Open()
+                    const result = await MH.SQLite.ExecuteData(sql);
+                    //await MH.SQLite.Close()
+
+                    for (let index = 0; index < result.length; index++) {
+                        const hobby = result[index];
+                        
+                        const div = document.createElement('div');
+                        const input = document.createElement('input');
+                        const label = document.createElement('label');
+
+                        input.value = hobby['ID'];
+                        input.id = 'id' + index;
+                        input.type = 'checkbox';
+                        label.setAttribute('for', 'id' + index);
+                        label.innerText = hobby['Name'];
+                        div.appendChild(input);
+                        div.appendChild(label);
+                        form.appendChild(div);
+                    }
+
+                } catch (error) {
+                    console.log(error, 'rellenando pantalla');
+                    return;
+                }
+
+                const User = MH.User;
+                const actualizar = User.HobbiesConnect.length > 0;
+
+                Utils.ExecuteFN((window, document) => {
+                    const inputs = document.getElementsByTagName('input');
+                    const hobbies = User.HobbiesConnect;
+
+                    for (let index = 0; index < hobbies.length; index++) {
+                        for (let j = 0; j < inputs.length; j++) {
+                            const input = inputs[j];
+                            if(input.value == hobbies[index]){
+                                input.checked = true;
+                                break;
+                            }
+                        }
+                    }
+                });
+
+                MH.BackPage = WVPages.CreateUserProfile;
+                MH.NextPage = WVPages.Wellbeing_BeActive;
+                MH.ShowBackButton(true);
+                MH.ShowNextButton(true);
+
+                Utils.HideLoadingScreen();
+
+                const OnGoTo = () => {
+                    main.style.backgroundColor = '';
+                    Utils.ShowLoadingScreen();
+                    return true;
+                }
+
+                const CheckNextPage = async () => {
+                    const InputsCheckeds = Utils.GetInputsChecked();
+                    const Hobbies = User.HobbiesConnect;
+
+                    if(InputsCheckeds.length < 1){
+                        Utils.ShowWarningMsg('Please select a hobby');
+                        return;
+                    }
+
+                    let sql = '';
+
+                    // Se va a "actualizar" los hobbies
+                    if(actualizar){
+
+                        sql = 
+                        `
+                            DELETE FROM UserWellbeingHobbies
+                            WHERE 1 = 1
+                            AND IDUser = ${User.ID}
+                            AND IDWellbeingHobby = 1
+                        `;
+
+                        try {
+                            //await MH.SQLite.Open();
+                            await MH.SQLite.ExecuteNonQuery(sql);
+                            Hobbies.length = 0;
+                            //await MH.SQLite.Close();
+                        } catch (error) {
+                            console.log(error, 'borrando hobbies');
+                            
+                            return;
+                        }
+                    }
+
+                    
+                    
+                    sql =
+                    `
+                        INSERT INTO UserWellbeingHobbies
+                            (
+                                IDUser,
+                                IDHobby,
+                                IDWellbeingHobby
+                            )
+                        VALUES
+                            (
+                                1,
+                                {0},
+                                1
+                            )
+                    `;
+
+                    for (let index = 0; index < InputsCheckeds.length; index++) {
+                        const input = InputsCheckeds[index];
+                        const sqlFinal = sql.replace('{0}', input.value);
+                        Hobbies.push(input.value);
+
+                        try {
+                            //await MH.SQLite.Open();
+                            await MH.SQLite.ExecuteNonQuery(sqlFinal);
+                            //await MH.SQLite.Close();
+
+                        } catch (error) {
+                            console.log(error, 'insertando hobbies');
+                            return;
+                        }
+                    }
+                    
+
+                    OnGoTo();
+                    MH.GoToPage(MH.NextPage);
+                }
+
+                MH.Controller.OnGoToBack = OnGoTo;
+
+                MH.Controller.OnGoToNext = () => {
+                    CheckNextPage();
+                    return false;
+                }
+            });
+
+        </script>
+
+    </template>
+
+    <template id="Wellbeing_BeActive">
+
+        <form name="Wellbeing">
+            <h1>Be Active</h1>
+
+        </form>
+
+        <script>
+
+            Utils.ExecuteFN(async (window, document) => {
+                const main = document.querySelector('main');
+                const form = document.querySelector('form');
+
+                main.style.backgroundColor = 'var(--color-beactive)'
+
+                // Rellenar los hobbies en la pantalla
+                try {
+                    const sql =
+                    `
+                        SELECT 
+                            ID,
+                            Name
+                        FROM WellbeingHobbies
+                        WHERE IDWellbeing = 2
+                    `;
+
+                    //await MH.SQLite.Open()
+                    const result = await MH.SQLite.ExecuteData(sql);
+                    //await MH.SQLite.Close()
+
+                    for (let index = 0; index < result.length; index++) {
+                        const hobby = result[index];
+                        
+                        const div = document.createElement('div');
+                        const input = document.createElement('input');
+                        const label = document.createElement('label');
+
+                        input.value = hobby['ID'];
+                        input.id = 'id' + index;
+                        input.type = 'checkbox';
+                        label.setAttribute('for', 'id' + index);
+                        label.innerText = hobby['Name'];
+                        div.appendChild(input);
+                        div.appendChild(label);
+                        form.appendChild(div);
+                    }
+
+                } catch (error) {
+                    console.log(error);
+                }
+
+                const User = MH.User;
+                const actualizar = User.HobbiesBeActive.length > 0;
+
+                Utils.ExecuteFN((window, document) => {
+                    const inputs = document.getElementsByTagName('input');
+                    const hobbies = User.HobbiesBeActive;
+
+                    for (let index = 0; index < hobbies.length; index++) {
+                        for (let j = 0; j < inputs.length; j++) {
+                            const input = inputs[j];
+                            if(input.value == hobbies[index]){
+                                input.checked = true;
+                                break;
+                            }
+                        }
+                    }
+                });
+
+                MH.BackPage = WVPages.Wellbeing_Connect;
+                MH.NextPage = WVPages.Wellbeing_KeepLearning;
+                MH.ShowBackButton(true);
+                MH.ShowNextButton(true);
+
+                Utils.HideLoadingScreen();
+
+                const OnGoTo = () => {
+                    main.style.backgroundColor = '';
+                    Utils.ShowLoadingScreen();
+                    return true;
+                }
+
+                const CheckNextPage = async () => {
+                    const InputsCheckeds = Utils.GetInputsChecked();
+                    const Hobbies = User.HobbiesBeActive;
+
+                    if(InputsCheckeds.length < 1){
+                        Utils.ShowWarningMsg('Please select a hobby');
+                        return;
+                    }
+
+                    let sql = '';
+
+                    // Se va a "actualizar" los hobbies
+                    if(actualizar){
+                        sql = 
+                        `
+                            DELETE FROM UserWellbeingHobbies
+                            WHERE 1 = 1
+                            AND IDUser = ${User.ID}
+                            AND IDWellbeingHobby = 2
+                        `;
+
+                        try {
+                            //await MH.SQLite.Open();
+                            await MH.SQLite.ExecuteNonQuery(sql);
+                            //await MH.SQLite.Close();
+                        } catch (error) {
+                            console.log(error);
+                        }
+                    }
+
+                    
+                    sql =
+                    `
+                        INSERT INTO UserWellbeingHobbies
+                            (
+                                IDUser,
+                                IDHobby,
+                                IDWellbeingHobby
+                            )
+                        VALUES
+                            (
+                                ${User.ID},
+                                {0},
+                                2
+                            )
+                    `;
+
+                    for (let index = 0; index < InputsCheckeds.length; index++) {
+                        const input = InputsCheckeds[index];
+                        const sqlFinal = sql.replace('{0}', input.value);
+                        Hobbies.push(input.value);
+
+                        try {
+                            //await MH.SQLite.Open();
+                            await MH.SQLite.ExecuteNonQuery(sqlFinal);
+                            //await MH.SQLite.Close();
+                        } catch (error) {
+                            console.log(error);
+                        }
+                    }
+                    
+                    OnGoTo();
+                    MH.GoToPage(MH.NextPage);
+                }
+
+                MH.Controller.OnGoToBack = OnGoTo;
+
+                MH.Controller.OnGoToNext = () => {
+                    CheckNextPage();
+                    return false;
+                }
+            });
+
+        </script>
+
+    </template>
+
+    <template id="Wellbeing_KeepLearning">
+
+        <form name="Wellbeing">
+            <h1>Keep Learning</h1>
+
+        </form>
+
+        <script>
+
+            Utils.ExecuteFN(async (window, document) => {
+                const main = document.querySelector('main');
+                const form = document.querySelector('form');
+
+                main.style.backgroundColor = 'var(--color-keeplearning)'
+
+                // Rellenar los hobbies en la pantalla
+                try {
+                    const sql =
+                    `
+                        SELECT 
+                            ID,
+                            Name
+                        FROM WellbeingHobbies
+                        WHERE IDWellbeing = 3
+                    `;
+
+                    //await MH.SQLite.Open()
+                    const result = await MH.SQLite.ExecuteData(sql);
+                    //await MH.SQLite.Close()
+
+                    for (let index = 0; index < result.length; index++) {
+                        const hobby = result[index];
+                        
+                        const div = document.createElement('div');
+                        const input = document.createElement('input');
+                        const label = document.createElement('label');
+
+                        input.value = hobby['ID'];
+                        input.id = 'id' + index;
+                        input.type = 'checkbox';
+                        label.setAttribute('for', 'id' + index);
+                        label.innerText = hobby['Name'];
+                        div.appendChild(input);
+                        div.appendChild(label);
+                        form.appendChild(div);
+                    }
+
+                } catch (error) {
+                    console.log(error);
+                }
+
+                const User = MH.User;
+                const actualizar = User.HobbiesKeepLearning.length > 0;
+
+                Utils.ExecuteFN((window, document) => {
+                    const inputs = document.getElementsByTagName('input');
+                    const hobbies = User.HobbiesKeepLearning;
+
+                    for (let index = 0; index < hobbies.length; index++) {
+                        for (let j = 0; j < inputs.length; j++) {
+                            const input = inputs[j];
+                            if(input.value == hobbies[index]){
+                                input.checked = true;
+                                break;
+                            }
+                        }
+                    }
+                });
+
+                MH.BackPage = WVPages.Wellbeing_BeActive;
+                MH.NextPage = WVPages.Wellbeing_Give;
+                MH.ShowBackButton(true);
+                MH.ShowNextButton(true);
+
+                Utils.HideLoadingScreen();
+
+                const OnGoTo = () => {
+                    main.style.backgroundColor = '';
+                    Utils.ShowLoadingScreen();
+                    return true;
+                }
+
+                const CheckNextPage = async () => {
+                    const InputsCheckeds = Utils.GetInputsChecked();
+                    const Hobbies = User.HobbiesKeepLearning;
+
+                    if(InputsCheckeds.length < 1){
+                        Utils.ShowWarningMsg('Please select a hobby');
+                        return;
+                    }
+
+                    let sql = '';
+
+                    // Se va a "actualizar" los hobbies
+                    if(actualizar){
+                        sql = 
+                        `
+                            DELETE FROM UserWellbeingHobbies
+                            WHERE 1 = 1
+                            AND IDUser = ${User.ID}
+                            AND IDWellbeingHobby = 3
+                        `;
+
+                        try {
+                            //await MH.SQLite.Open();
+                            await MH.SQLite.ExecuteNonQuery(sql);
+                            //await MH.SQLite.Close();
+                        } catch (error) {
+                            console.log(error);
+                        }
+                    }
+
+                    
+                    sql =
+                    `
+                        INSERT INTO UserWellbeingHobbies
+                            (
+                                IDUser,
+                                IDHobby,
+                                IDWellbeingHobby
+                            )
+                        VALUES
+                            (
+                                ${User.ID},
+                                {0},
+                                3
+                            )
+                    `;
+
+                    for (let index = 0; index < InputsCheckeds.length; index++) {
+                        const input = InputsCheckeds[index];
+                        const sqlFinal = sql.replace('{0}', input.value);
+                        Hobbies.push(input.value);
+
+                        try {
+                            //await MH.SQLite.Open();
+                            await MH.SQLite.ExecuteNonQuery(sqlFinal);
+                            //await MH.SQLite.Close();
+                        } catch (error) {
+                            console.log(error);
+                        }
+                    }
+                    
+                    OnGoTo();
+                    MH.GoToPage(MH.NextPage);
+                }
+
+                MH.Controller.OnGoToBack = OnGoTo;
+
+                MH.Controller.OnGoToNext = () => {
+                    CheckNextPage();
+                    return false;
+                }
+            });
+
+        </script>
+
+    </template>
+
+    <template id="Wellbeing_Give">
+
+        <form name="Wellbeing">
+            <h1>Give</h1>
+
+        </form>
+
+        <script>
+
+            Utils.ExecuteFN(async (window, document) => {
+                const main = document.querySelector('main');
+                const form = document.querySelector('form');
+
+                main.style.backgroundColor = 'var(--color-give)'
+
+                // Rellenar los hobbies en la pantalla
+                try {
+                    const sql =
+                    `
+                        SELECT 
+                            ID,
+                            Name
+                        FROM WellbeingHobbies
+                        WHERE IDWellbeing = 4
+                    `;
+
+                    //await MH.SQLite.Open()
+                    const result = await MH.SQLite.ExecuteData(sql);
+                    //await MH.SQLite.Close()
+
+                    for (let index = 0; index < result.length; index++) {
+                        const hobby = result[index];
+                        
+                        const div = document.createElement('div');
+                        const input = document.createElement('input');
+                        const label = document.createElement('label');
+
+                        input.value = hobby['ID'];
+                        input.id = 'id' + index;
+                        input.type = 'checkbox';
+                        label.setAttribute('for', 'id' + index);
+                        label.innerText = hobby['Name'];
+                        div.appendChild(input);
+                        div.appendChild(label);
+                        form.appendChild(div);
+                    }
+
+                } catch (error) {
+                    console.log(error);
+                }
+
+                const User = MH.User;
+                const actualizar = User.HobbiesGive.length > 0;
+
+                Utils.ExecuteFN((window, document) => {
+                    const inputs = document.getElementsByTagName('input');
+                    const hobbies = User.HobbiesGive;
+
+                    for (let index = 0; index < hobbies.length; index++) {
+                        for (let j = 0; j < inputs.length; j++) {
+                            const input = inputs[j];
+                            if(input.value == hobbies[index]){
+                                input.checked = true;
+                                break;
+                            }
+                        }
+                    }
+                });
+
+                MH.BackPage = WVPages.Wellbeing_KeepLearning;
+                MH.NextPage = WVPages.Wellbeing_TakeNotice;
+                MH.ShowBackButton(true);
+                MH.ShowNextButton(true);
+
+                Utils.HideLoadingScreen();
+
+                const OnGoTo = () => {
+                    main.style.backgroundColor = '';
+                    Utils.ShowLoadingScreen();
+                    return true;
+                }
+
+                const CheckNextPage = async () => {
+                    const InputsCheckeds = Utils.GetInputsChecked();
+                    const Hobbies = User.HobbiesGive;
+
+                    if(InputsCheckeds.length < 1){
+                        Utils.ShowWarningMsg('Please select a hobby');
+                        return;
+                    }
+
+                    let sql = '';
+
+                    // Se va a "actualizar" los hobbies
+                    if(actualizar){
+                        sql = 
+                        `
+                            DELETE FROM UserWellbeingHobbies
+                            WHERE 1 = 1
+                            AND IDUser = ${User.ID}
+                            AND IDWellbeingHobby = 4
+                        `;
+
+                        try {
+                            //await MH.SQLite.Open();
+                            await MH.SQLite.ExecuteNonQuery(sql);
+                            //await MH.SQLite.Close();
+                        } catch (error) {
+                            console.log(error);
+                        }
+                    }
+
+                    
+                    sql =
+                    `
+                        INSERT INTO UserWellbeingHobbies
+                            (
+                                IDUser,
+                                IDHobby,
+                                IDWellbeingHobby
+                            )
+                        VALUES
+                            (
+                                ${User.ID},
+                                {0},
+                                4
+                            )
+                    `;
+
+                    for (let index = 0; index < InputsCheckeds.length; index++) {
+                        const input = InputsCheckeds[index];
+                        const sqlFinal = sql.replace('{0}', input.value);
+                        Hobbies.push(input.value);
+
+                        try {
+                            //await MH.SQLite.Open();
+                            await MH.SQLite.ExecuteNonQuery(sqlFinal);
+                            //await MH.SQLite.Close();
+                        } catch (error) {
+                            console.log(error);
+                        }
+                    }
+                    
+                    OnGoTo();
+                    MH.GoToPage(MH.NextPage);
+                }
+
+                MH.Controller.OnGoToBack = OnGoTo;
+
+                MH.Controller.OnGoToNext = () => {
+                    CheckNextPage();
+                    return false;
+                }
+            });
+
+        </script>
+
+    </template>
+
+    <template id="Wellbeing_TakeNotice">
+
+        <form name="Wellbeing">
+            <h1>Take Notice</h1>
+
+        </form>
+
+        <script>
+
+            Utils.ExecuteFN(async (window, document) => {
+                const main = document.querySelector('main');
+                const form = document.querySelector('form');
+
+                main.style.backgroundColor = 'var(--color-give)'
+
+                // Rellenar los hobbies en la pantalla
+                try {
+                    const sql =
+                    `
+                        SELECT 
+                            ID,
+                            Name
+                        FROM WellbeingHobbies
+                        WHERE IDWellbeing = 5
+                    `;
+
+                    //await MH.SQLite.Open()
+                    const result = await MH.SQLite.ExecuteData(sql);
+                    //await MH.SQLite.Close()
+
+                    for (let index = 0; index < result.length; index++) {
+                        const hobby = result[index];
+                        
+                        const div = document.createElement('div');
+                        const input = document.createElement('input');
+                        const label = document.createElement('label');
+
+                        input.value = hobby['ID'];
+                        input.id = 'id' + index;
+                        input.type = 'checkbox';
+                        label.setAttribute('for', 'id' + index);
+                        label.innerText = hobby['Name'];
+                        div.appendChild(input);
+                        div.appendChild(label);
+                        form.appendChild(div);
+                    }
+
+                } catch (error) {
+                    console.log(error);
+                }
+
+                const User = MH.User;
+                const actualizar = User.HobbiesTakeNotice.length > 0;
+
+                Utils.ExecuteFN((window, document) => {
+                    const inputs = document.getElementsByTagName('input');
+                    const hobbies = User.HobbiesTakeNotice;
+
+                    for (let index = 0; index < hobbies.length; index++) {
+                        for (let j = 0; j < inputs.length; j++) {
+                            const input = inputs[j];
+                            if(input.value == hobbies[index]){
+                                input.checked = true;
+                                break;
+                            }
+                        }
+                    }
+                });
+
+                MH.BackPage = WVPages.Wellbeing_Give;
+                MH.NextPage = WVPages.Welcome;
+                MH.ShowBackButton(true);
+                MH.ShowNextButton(true);
+
+                Utils.HideLoadingScreen();
+
+                const OnGoTo = () => {
+                    main.style.backgroundColor = '';
+                    Utils.ShowLoadingScreen();
+                    return true;
+                }
+
+                const CheckNextPage = async () => {
+                    const InputsCheckeds = Utils.GetInputsChecked();
+                    const Hobbies = User.HobbiesTakeNotice;
+
+                    if(InputsCheckeds.length < 1){
+                        Utils.ShowWarningMsg('Please select a hobby');
+                        return;
+                    }
+
+                    let sql = '';
+
+                    // Se va a "actualizar" los hobbies
+                    if(actualizar){
+                        sql = 
+                        `
+                            DELETE FROM UserWellbeingHobbies
+                            WHERE 1 = 1
+                            AND IDUser = ${User.ID}
+                            AND IDWellbeingHobby = 5
+                        `;
+
+                        try {
+                            //await MH.SQLite.Open();
+                            await MH.SQLite.ExecuteNonQuery(sql);
+                            //await MH.SQLite.Close();
+                        } catch (error) {
+                            console.log(error);
+                        }
+                    }
+
+                    
+                    sql =
+                    `
+                        INSERT INTO UserWellbeingHobbies
+                            (
+                                IDUser,
+                                IDHobby,
+                                IDWellbeingHobby
+                            )
+                        VALUES
+                            (
+                                ${User.ID},
+                                {0},
+                                5
+                            )
+                    `;
+
+                    for (let index = 0; index < InputsCheckeds.length; index++) {
+                        const input = InputsCheckeds[index];
+                        const sqlFinal = sql.replace('{0}', input.value);
+                        Hobbies.push(input.value);
+
+                        try {
+                            //await MH.SQLite.Open();
+                            await MH.SQLite.ExecuteNonQuery(sqlFinal);
+                            //await MH.SQLite.Close();
+                        } catch (error) {
+                            console.log(error);
+                        }
+                    }
+                    
+                    OnGoTo();
+                    MH.GoToPage(MH.NextPage);
+                }
+
+                MH.Controller.OnGoToBack = OnGoTo;
+
+                MH.Controller.OnGoToNext = () => {
+                    CheckNextPage();
+                    return false;
+                }
+            });
+
+        </script>
+
+    </template>
+
+</div>
+
+    <template id="Welcome">
+
+        <form name="Welcome" class="form-center">
+            
+            <h1>Hi <span id="Firstname"></span>!</h1>
+            <h1>Welcome to your app!</h1>
+            <h1></h1>
+            <h1></h1>
+            <h1></h1>
+            <h1></h1>
+        
+        </form>
+
+        <script>
+
+            MH.BackPage = WVPages.SingIn;
+            MH.NextPage = WVPages.HowAreYouToday;
+
+            MH.ShowBackButton(true);
+            MH.ShowNextButton(false);
+
+            Utils.ExecuteFN((window, document) => {
+                document.getElementById('Firstname').innerText = MH.User.FirstName;
+
+                const GoTo = () => {
+                    Utils.ShowLoadingScreen();
+                    return true;
+                }
+
+                MH.Controller.OnGoToNext = GoTo;
+                MH.Controller.OnGoToBack = GoTo;
+
+                setTimeout(function(){
+                    MH.ShowNextButton(true);
+                }, 1500)
+
+                setTimeout(function(){
+                    MH.GoToNext();
+                }, 3000)
+
+                Utils.HideLoadingScreen();
+            });
+            
+        </script>
+
+
+    </template>
+
+    <template id="HowAreYouToday">
+
+        <form name="HowAreYou">
+            <h1>How are you today?</h1>
+            
+            <div class="moods-container">
+                <input id="Angry" type="radio" value="1" name="Mood">
+                <label for="Angry">
+                    <span>😡</span>
+                    <span>Angry</span>
+                </label>
+                
+        
+                <input id="Sad" type="radio" value="2" name="Mood">
+                <label for="Sad">
+                    <span>😢</span>
+                    <span>Sad</span>
+                </label>
+        
+                <input id="Tired" type="radio" value="3" name="Mood">
+                <label for="Tired">
+                    <span>😩</span>
+                    <span>Tired</span>
+                </label>
+                
+                <input id="Good" type="radio" value="4" name="Mood">
+                <label for="Good"> 
+                    <span>😃</span>
+                    <span>Good</span>
+                </label>
+                
+                <input id="Happy" type="radio" value="5" name="Mood">
+                <label for="Happy">
+                    <span>😆</span>
+                    <span>Happy</span>
+                    
+                </label>
+            </div>
+            
+        </form>
+
+        <script>
+
+            MH.NextPage = WVPages.WhatDoYouWantToDo;
+
+            MH.ShowBackButton(false);
+            MH.ShowNextButton(true);
+
+            Utils.ExecuteFN(async (window, document) => {
+                const User = MH.User;
+
+                if(User.MoodBefore > 0){
+                    const inputs = document.getElementsByTagName('input');
+
+                    for (let index = 0; index < inputs.length; index++) {
+                        const input = inputs[index];
+                        if(input.value == User.MoodBefore){
+                            input.checked = true;
+                            break;
+                        }
+                    }
+                }
+
+                const CheckNextPage = async () => {
+                    const radio = Utils.GetRadioInputChecked()
+
+                    if(radio === null){
+                        Utils.ShowWarningMsg("Please select a mood");
+                        return;
+                    }
+
+                    User.MoodBefore = radio.value;
+
+                    Utils.ShowLoadingScreen();
+                    MH.GoToPage(MH.NextPage);
+                }
+
+                MH.Controller.OnGoToNext = function(){
+                    CheckNextPage();
+                    return false;
+                }
+
+                Utils.HideLoadingScreen();
+            });
+
+        </script>
+
+    </template>
+
+<!-- ACCIÓN -->
+<div>
+
+    <template id="WhatDoYouWantToDo">
+
+        <form name="WhatYouWant" class="form-selection">
+            <h1>What do you want to do?</h1>
+            
+            <input id="note" type="radio" value="1" name="Iwant">
+            <label for="note" class="btn-default">Write about your feelings</label>
+        
+            <input id="record" type="radio" value="2" name="Iwant">
+            <label for="record" class="btn-default">Record you feelings</label>
+            
+            <input id="retrieve" type="radio" value="3" name="Iwant">
+            <label for="retrieve" class="btn-default">Retrieve your recordings or notes</label>
+            
+        </form>
+
+        <script>
+
+            MH.BackPage = WVPages.HowAreYouToday;
+            MH.ShowBackButton(true);
+            MH.ShowNextButton(true);
+
+            Utils.ExecuteFN(async (window, document) => {
+                const User = MH.User;
+
+                if(User.Action > 0){
+                    const inputs = document.getElementsByTagName('input');
+                    for (let index = 0; index < inputs.length; index++) {
+                        const input = inputs[index];
+                        if(input.value == User.Action){
+                            input.checked = true;
+                            break;
+                        }
+                    }
+                }
+
+                MH.Controller.OnGoToBack = () => {
+                    Utils.ShowLoadingScreen();
+                    return true;
+                };
+
+                MH.Controller.OnGoToNext = function(){
+
+                    const radio = Utils.GetRadioInputChecked();
+
+                    if(radio == null){
+                        Utils.ShowWarningMsg("Please select a option")
+                        return false
+                    }
+
+                    switch (radio.value) {
+                        case '1':
+                            MH.NextPage = WVPages.NoteYourFeelings;
+                            break;
+                    
+                        case '2':
+                            MH.NextPage = WVPages.RecordAnAudio;
+                            break;
+
+                        case '3':
+                            MH.NextPage = WVPages.Retrieve;
+                            break;
+                    }
+
+                    User.Action = radio.value;
+
+                    Utils.ShowLoadingScreen();
+                    return true;
+                }
+
+                Utils.HideLoadingScreen();
+            });
+
+            
+
+        </script>
+
+    </template>
+
+    <template id="NoteYourFeelings">
+
+        <form name="NoteFeelings">
+            <input id="StoryTitle" class="input-textbox" type="text" placeholder="Name of the writing">
+            <textarea id="StoryText" placeholder="write here your feelings..."></textarea>
+        </form>
+
+        <script>
+
+            MH.BackPage = WVPages.WhatDoYouWantToDo;
+            MH.NextPage = WVPages.HowDoYouFeelNow;
+            MH.ShowBackButton(true);
+            MH.ShowNextButton(true);
+
+            Utils.ExecuteFN(async (window, document) => {
+                const User = MH.User;
+                const input = document.querySelector('input');
+                const textarea = document.querySelector('textarea');
+
+                if(User.Title.length > 0){
+                    input.value = User.Title;
+                }
+
+                MH.Controller.OnGoToBack = () => {
+                    Utils.ShowLoadingScreen();
+                    return true;
+                };
+
+                MH.Controller.OnGoToNext = function(){
+
+                    if(input.value.trim() === ''){
+                        Utils.ShowWarningMsg("Please write a title")
+                        return false;
+                    }
+
+                    if(textarea.value.trim() === ''){
+                        Utils.ShowWarningMsg("Please write a content")
+                        return false;
+                    }
+
+                    User.Title = input.value;
+                    User.Content = textarea.value;
+                    
+                    Utils.ShowLoadingScreen();
+                    return true;
+                }
+
+                Utils.HideLoadingScreen();
+            });
+
+            
+
+        </script>
+
+    </template>
+
+    <template id="RecordAnAudio">
+
+        <script>
+
+            MH.BackPage = 'WhatDoYouWantToDo';
+            MH.NextPage = 'HowDoYouFeelNow';
+            MH.ShowBackButton(true);
+            MH.ShowNextButton(true);
+
+            MH.Controller.OnGoToBack = () => true;
+
+            MH.Controller.OnGoToNext = function(){
+
+                const input = document.querySelector('input');
+                const textarea = document.querySelector('textarea');
+
+                if(input.value.trim() === ''){
+                    alert("Por favor escribe un nombre")
+                    return false;
+                }
+
+                if(textarea.textContent.trim() === ''){
+                    alert("Por favor escribe un contenido")
+                    return false;
+                }
+
+                
+
+                
+                return true;
+            }
+
+        </script>
+
+    </template>
+
+    <template id="Retrieve">
+
+        <script>
+
+            MH.BackPage = 'WhatDoYouWantToDo';
+            MH.NextPage = 'HowDoYouFeelNow';
+            MH.ShowBackButton(true);
+            MH.ShowNextButton(true);
+
+            MH.Controller.OnGoToBack = () => true;
+
+            MH.Controller.OnGoToNext = function(){
+
+                const input = document.querySelector('input');
+                const textarea = document.querySelector('textarea');
+
+                if(input.value.trim() === ''){
+                    alert("Por favor escribe un nombre")
+                    return false;
+                }
+
+                if(textarea.textContent.trim() === ''){
+                    alert("Por favor escribe un contenido")
+                    return false;
+                }
+
+                
+
+                
+                return true;
+            }
+
+        </script>
+
+    </template>
+
+</div>
+
+    <template id="HowDoYouFeelNow">
+
+        <form name="HowAreYou">
+            <h1>How do you feel now?</h1>
+            
+            <div class="moods-container">
+                <input id="Angry" type="radio" value="1" name="Mood">
+                <label for="Angry">
+                    <span>😡</span>
+                    <span>Angry</span>
+                </label>
+                
+        
+                <input id="Sad" type="radio" value="2" name="Mood">
+                <label for="Sad">
+                    <span>😢</span>
+                    <span>Sad</span>
+                </label>
+        
+                <input id="Tired" type="radio" value="3" name="Mood">
+                <label for="Tired">
+                    <span>😩</span>
+                    <span>Tired</span>
+                </label>
+                
+                <input id="Good" type="radio" value="4" name="Mood">
+                <label for="Good"> 
+                    <span>😃</span>
+                    <span>Good</span>
+                </label>
+                
+                <input id="Happy" type="radio" value="5" name="Mood">
+                <label for="Happy">
+                    <span>😆</span>
+                    <span>Happy</span>
+                     
+                </label>
+            </div>
+            
+        </form>
+
+        <script>
+
+            MH.ShowBackButton(false);
+            MH.ShowNextButton(true);
+
+            Utils.ExecuteFN(async (window, document) => {
+                const User = MH.User;
+
+                if(User.MoodAfter > 0){
+                    const inputs = document.getElementsByTagName('input');
+
+                    for (let index = 0; index < inputs.length; index++) {
+                        const input = inputs[index];
+                        if(input.value == User.MoodBefore){
+                            input.checked = true;
+                            break;
+                        }
+                    }
+                }
+
+                const CheckNextPage = async () => {
+                    const radio = Utils.GetRadioInputChecked()
+
+                    if(radio === null){
+                        Utils.ShowWarningMsg("Please select a mood");
+                        return;
+                    }
+
+                    User.MoodAfter = radio.value;
+
+                    if(User.MoodAfter < 4)
+                        MH.NextPage = WVPages.WhyDoYouFeelMood;
+                    else
+                        MH.NextPage = WVPages.GoodJob
+
+                        let sql = 
+                        `
+                            INSERT INTO UserStories
+                                (
+                                    IDUser,
+                                    IDStoryType,
+                                    IDMoodBefore,
+                                    IDMoodAfter,
+                                    Date,
+                                    Name,
+                                    Text,
+                                    Source
+                                )
+                            VALUES
+                                (
+                                    ${User.ID},
+                                    ${User.Action},
+                                    ${User.MoodBefore},
+                                    ${User.MoodAfter},
+                                    ${new Date().getTime()},
+                                    '${User.Title}',
+                                    ${User.Action == 1? "'" + User.Content + "'" : 'NULL'},
+                                    ${User.Action == 1? 'NULL' : "'" + User.Content + "'" }
+                                )
+                        `;
+
+                    try {
+                        await MH.SQLite.ExecuteNonQuery(sql);
+                    } catch (error) {
+                        console.log(error, sql);
+                        return;
+                    }
+
+                    Utils.ShowLoadingScreen();
+                    MH.GoToPage(MH.NextPage);
+                }
+
+                MH.Controller.OnGoToNext = function(){
+                    CheckNextPage();
+                    return false;
+                }
+
+                Utils.HideLoadingScreen();
+            });
+
+        </script>
+
+    </template>
+
+<!-- Bad Mood -->
+<div>
+
+    <template id="WhyDoYouFeelMood">
+        <p>Why do you feel <span id="Mood">angry</span>?</p>
+
+        <form>
+            <input id="Connect" type="radio" value="1" name="Why">
+            <label for="Connect">I feel disconnected from my Family, Friends or Community</label>
+            <br>
+            <input id="BeActive" type="radio" value="2" name="why">
+            <label for="BeActive">I have little or no structure/routine</label>
+            <br>
+            <input id="KeepLearning" type="radio" value="3" name="why">
+            <label for="KeepLearning">I feel demotivated/uninterested</label>
+            <br>
+            <input id="Give" type="radio" value="4" name="why">
+            <label for="Give">I feel alone/disengaged</label>
+            <br>
+            <input id="TakeNotice" type="radio" value="5" name="why">
+            <label for="TakeNotice">I am not aware of my surrounding</label>
+        </form>
+    </template>
+
+    <template id="Suggestion">
+
+    </template>
+
+</div>
+
+<template id="GoodJob">
+    <form name="GoodJob" class="form-center">
+            
+        <h1>Good job!</h1>
+        <h1>Keep doing what you are doing!</h1>
+        <h1></h1>
+        <h1></h1>
+        <h1></h1>
+        <h1></h1>
+    
+    </form>
+
+    <script>
+
+        //MH.BackPage = WVPages.SingIn;
+        MH.NextPage = WVPages.AnotherAction;
+
+        MH.ShowBackButton(false);
+        MH.ShowNextButton(false);
+
+        Utils.ExecuteFN((window, document) => {
+
+            const GoTo = () => {
+                Utils.ShowLoadingScreen();
+                return true;
+            }
+
+            MH.Controller.OnGoToNext = GoTo;
+            MH.Controller.OnGoToBack = GoTo;
+
+            setTimeout(function(){
+                MH.ShowNextButton(true);
+            }, 1500)
+
+            setTimeout(function(){
+                MH.GoToNext();
+            }, 3000)
+
+            Utils.HideLoadingScreen();
+        });
+
+        
+    </script>
+
+</template>
+
+<template id="AnotherAction">
+    <form name="AnotherAction" class="form-selection">
+            
+        <h1>Would you like to make a new entry?</h1>
+    
+        <input id="yes" type="radio" name="YesNo" value="1">
+        <label for="yes" class="btn-default">Yes</label>
+    
+        <input id="no" type="radio" name="YesNo" value="2">
+        <label for="no" class="btn-default">No</label>
+    
+    </form>
+
+    <script>
+
+        Utils.ExecuteFN((window, document) => {
+
+            MH.Controller.OnGoToNext = async () => {
+                const radio = Utils.GetRadioInputChecked();
+
+                if(radio == null){
+                    Utils.ShowErrorMsg('Please select a option');
+                    return;
+                }
+
+                if(radio.value == 1){
+
+                }
+                else {
+
+                }
+            }
+
+            Utils.HideLoadingScreen();
+        });
+
+    </script>
+</template>
+
+<template id="FinalScreen">
+    <form name="FinalScreen" class="form-center">
+        <h1>Remember to connect again and keep talking</h1>
+        <h1></h1>
+        <h1></h1>
+        <h1></h1>
+    </form>
+
+    <script>
+
+        Utils.ExecuteFN((window, document) => {
+
+            Utils.HideLoadingScreen();
+        });
+
+    </script>
+
+</template>
+
+<!--<script type="module" src="js/script.js"></script>-->
+
+<script src="index.js"></script>
+
+</body>
+</html>

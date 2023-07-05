@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!--<meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>MENHIR</title>
+
+    <!-- Console.log  - Para debugging en movil -->
+    <!---->
+    <script src="https://cdn.jsdelivr.net/gh/c-kick/mobileConsole/hnl.mobileconsole.min.js"></script>
+
+    <link href="css/general.css" rel="stylesheet"/>
+
+    <!-- Componentes -->
+    <link href="css/loading-screen.css" rel="stylesheet"/>
+    <link href="css/nav-bar.css" rel="stylesheet"/>
+    <link href="css/back-button.css" rel="stylesheet"/>
+    <link href="css/next-button.css" rel="stylesheet"/>
+
+</head>
+<body>
+    <loading-screen>
+        <div class="spinner"></div>
+    </loading-screen>
+
+    <nav-bar>
+        <back-button>
+            <i></i>
+        </back-button>
+        <div class="banner-ctn">
+            <img src="img/MENHIR.png">
+            <img src="img/AMHL.jpg">
+            <img src="img/UPV_EHU.jpg">
+            <img src="img/UGR.png">
+        </div>
+    </nav-bar>
+
+    <next-button>
+        <i></i>
+    </next-button>
+
+    <error-msg></error-msg>
+    <warning-msg></warning-msg>
+    <info-msg></info-msg>
+
+    <main id="root"></main>
+
+    <script src="index.js"></script>
+</body>
+</html>

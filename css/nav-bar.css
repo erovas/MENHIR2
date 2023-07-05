@@ -1,0 +1,30 @@
+nav-bar {
+    display: flex;
+    min-height: 50px;
+    max-height: 50px;
+    min-width: 100vw;
+    background-color: white;
+    position: fixed;
+    top: 0;
+    left: 0;
+    justify-content: center;
+    align-items: center;
+    padding-left: 5px;
+    padding-right: 5px;
+
+
+    & .banner-ctn {
+        display: flex;
+        flex-grow: 1;
+        justify-content:end;
+        align-items: center;
+        height: 50px;
+        /*background-color: #00999F;*/
+    }
+
+    & img {
+        height: 100%;
+    }
+
+
+}
