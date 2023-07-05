@@ -610,18 +610,6 @@
 
             let hide = false;
 
-            /*
-            await SQLite.Open();
-            const response = await MH.SQLite.ExecuteData(
-                `
-                    SELECT *
-                    FROM UserHobbiesConnect
-                `)
-            await SQLite.Close()
-
-            console.error(JSON.stringify(response))
-            */
-
             try {
                 // Ejecutar carga de la vista
                 const load = (await import('./js/' + page + '.js')).default;

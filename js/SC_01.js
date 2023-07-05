@@ -35,8 +35,7 @@ export default async function(window, document, MH){
         singinLock = true;
 
         Utils.ExecuteFN(async (window, document) => {
-            await SQLite.Open();
-
+            
             //#region Obtener los datos de la tabla Users
 
             let sql = 
@@ -59,7 +58,9 @@ export default async function(window, document, MH){
                 Password: password.value
             }
 
-            let response = await SQLite.ExecuteData(sql, parameters)
+            await SQLite.Open();
+            let response = await SQLite.ExecuteData(sql, parameters);
+            await SQLite.Close();
 
             if(response.length < 1){
                 Utils.ShowWarningMsg('Bad Username or Password')
@@ -90,7 +91,8 @@ export default async function(window, document, MH){
                 IDUser: User.ID
             }
 
-            const hobbies = ['HobbiesConnect', 'HobbiesBeActive', 'HobbiesKeepLearning', 'HobbiesGive', 'HobbiesTakeNotice']
+            const hobbies = ['HobbiesConnect', 'HobbiesBeActive', 'HobbiesKeepLearning', 'HobbiesGive', 'HobbiesTakeNotice'];
+            await SQLite.Open();
 
             for (let index = 0; index < hobbies.length; index++) {
                 const hobby = hobbies[index];
@@ -103,6 +105,8 @@ export default async function(window, document, MH){
                     User[hobby].push(item.IDHobby);
                 });
             }
+
+            await SQLite.Close();
 
             //#endregion
 
@@ -129,6 +133,7 @@ export default async function(window, document, MH){
                 IDUser: User.ID
             }
 
+            await SQLite.Open();
             response = await SQLite.ExecuteData(sql, parameters);
             await SQLite.Close();
 

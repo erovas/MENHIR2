@@ -40,7 +40,7 @@ export default async function(window, document, MH){
         const radio = Utils.GetRadioInputChecked();
 
         if(radio == null){
-            Utils.ShowWarningMsg('Please select a mood')
+            Utils.ShowWarningMsg('Please select a mood');
             NextButtonlock = false;
             return;
         }
