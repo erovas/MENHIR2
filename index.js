@@ -438,7 +438,7 @@
     await (async MH => {
         const SQLite = MH.SQLite;
         const filePath = await SQLite.get_DatabasePath();
-        await MH.DeviceHandler.DeleteFile(filePath);    // Borrar base de datos
+        //await MH.DeviceHandler.DeleteFile(filePath);    // Borrar base de datos
         const ddbbExists = await MH.DeviceHandler.FileExists(filePath);
 
         //console.log(MH.Fetch.Sync('./js/script.jss'))
