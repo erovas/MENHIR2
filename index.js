@@ -1,7 +1,3 @@
-const ASD = 1234;
-
-try {
-
 (async (window, document) => {
 
     //#region Construcción de Objetos
@@ -249,10 +245,10 @@ try {
 
         _Async: async url => {
             //if(location.protocol == 'file:')
-                console.log(Xam.CurrentDirectory + url.replace('.', ''))
-                return await Xam.Fetch(Xam.CurrentDirectory + url.replace('.', ''))
-            /*else
-                return await (await fetch(url)).text();*/
+                //console.log(Xam.CurrentDirectory + url.replace('.', ''))
+                //return await Xam.Fetch(Xam.CurrentDirectory + url.replace('.', ''))
+            /*else*/
+                return await (await fetch(url)).text();
         },
         get Async(){
             return this._Async;
@@ -614,6 +610,7 @@ try {
 
             let hide = false;
 
+            /*
             await SQLite.Open();
             const response = await MH.SQLite.ExecuteData(
                 `
@@ -623,6 +620,7 @@ try {
             await SQLite.Close()
 
             console.error(JSON.stringify(response))
+            */
 
             try {
                 // Ejecutar carga de la vista
@@ -675,8 +673,3 @@ try {
     MH.Goto(MH.Routes.SC_00);
 
 })(window, document);
-
-}
-catch(error){
-    console.error(error)
-}
